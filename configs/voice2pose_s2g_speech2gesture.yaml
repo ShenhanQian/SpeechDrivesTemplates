@@ -1,0 +1,19 @@
+PIPELINE_TYPE: 'Voice2Pose'
+
+VOICE2POSE:
+  GENERATOR:
+    NAME: 'SequenceGeneratorCNN'
+    NORM: 'BN'
+    LOSS_REG: 'L1Loss'
+  POSE_DISCRIMINATOR:
+    NAME: 'PoseSequenceDiscriminator'
+    LAMBDA_GAN: 0.1
+    LEAKY_RELU: True
+
+DATASET:
+  NAME: 'speech2gesture'
+  ROOT_DIR: 'datasets/speech2gesture'
+  HIERARCHICAL_POSE: False
+
+SYS:
+  NUM_WORKERS: 16

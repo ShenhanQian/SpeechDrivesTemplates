@@ -1,0 +1,13 @@
+PIPELINE_TYPE: 'Pose2Pose'
+POSE2POSE:
+  AUTOENCODER:
+    NAME: 'Autoencoder'
+  LOSS_REG: 'L1Loss'
+
+DATASET:
+  NAME: 'speech2gesture'
+  ROOT_DIR: 'datasets/speech2gesture'
+
+TRAIN:
+  NUM_EPOCHS: 100
+  LR: 1e-4
