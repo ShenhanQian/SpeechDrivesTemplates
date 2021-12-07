@@ -1,13 +1,15 @@
 # SpeechDrivesTemplates
 The official repo for the ICCV-2021 paper "Speech Drives Templates: Co-Speech Gesture Synthesis with Learned Templates".
 
+[[arxiv](https://arxiv.org/abs/2108.08020) / [video](https://youtu.be/yu-5gUHn6h8)]
+
 <p align="center">
   <img src="./iccv2021_sdt.jpg" width=500px/>
 </p>
 
-- [X] Code.
-- [ ] Model.
-- [ ] Data preparation.
+- [X] Code
+- [ ] Model
+- [ ] Data preparation
 
 
 ## Package Hierarchy
@@ -54,7 +56,7 @@ For your own dataset, you need to implement a subclass of `torch.utils.data.Data
 ### Train a Model from Scratch
 
 ``` bash
-python main.py --config-file configs/voice2pose_sdt_bp_speech2gesture.yaml \
+python main.py --config_file configs/voice2pose_sdt_bp_speech2gesture.yaml \
     --tag DEV \
     SYS.NUM_WORKERS 32
 ```
@@ -66,7 +68,7 @@ adding it at the end of the command. The example above set `SYS.NUM_WORKERS` to 
 ### Resume Training from an Interrupted Experiment
 
 ``` bash
-python main.py --config-file configs/voice2pose_sdt_bp_speech2gesture.yaml \
+python main.py --config_file configs/voice2pose_sdt_bp_speech2gesture.yaml \
     --resume_from <checkpoint-to-continue-from>
 ```
 
@@ -75,7 +77,7 @@ python main.py --config-file configs/voice2pose_sdt_bp_speech2gesture.yaml \
 ### Training from a pretrained model
 
 ``` bash
-python main.py --config-file configs/voice2pose_sdt_bp_speech2gesture.yaml \
+python main.py --config_file configs/voice2pose_sdt_bp_speech2gesture.yaml \
     --pretrain_from <checkpoint-to-continue-from> \
     --tag DEV
 ```
@@ -87,7 +89,7 @@ python main.py --config-file configs/voice2pose_sdt_bp_speech2gesture.yaml \
 To **test** the model, run this command:
 
 ``` bash
-python main.py --config-file configs/voice2pose_sdt_bp_speech2gesture.yaml \
+python main.py --config_file configs/voice2pose_sdt_bp_speech2gesture.yaml \
     --tag DEV \
     --test-only \
     --checkpoint <path-to-checkpoint>
