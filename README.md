@@ -7,6 +7,8 @@ The official repo for the ICCV-2021 paper "Speech Drives Templates: Co-Speech Ge
   <img src="./iccv2021_sdt.jpg" width=500px/>
 </p>
 
+Our paper and this repo focus on upper-body pose generation from audio. To synthesize images from poses, please refer to this [Pose2Img](https://github.com/zyhbili/Pose2Img) repo.
+
 - [X] Code
 - [ ] Model
 - [ ] Data preparation
@@ -37,9 +39,6 @@ The official repo for the ICCV-2021 paper "Speech Drives Templates: Co-Speech Ge
 `-- main.py
 
 ```
-
-We split the entire pipeline into two sub-pipelines including
-`voice2pose` and `pose2pose`, which inherit from the `Trainer` class.
 
 ## Setup the Dataset
 
