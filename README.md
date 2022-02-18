@@ -108,10 +108,12 @@ To **evaluate** a model on an audio file, use `--demo_input` and `--checkpoint` 
 ```bash
 python main.py --config_file configs/voice2pose_sdt_bp.yaml \
     --tag oliver \
-    --demo_input <audio.wav> \
+    --demo_input demo_audio.wav \
     --checkpoint <path-to-checkpoint> \
     DATASET.SPEAKER oliver
 ```
+
+You can find our checkpoint [here](https://shanghaitecheducn-my.sharepoint.com/:f:/g/personal/qianshh_shanghaitech_edu_cn/EhOVnrnCYS5KqDIkamXBJbgBLOzu8vEFGwy88jSRSNATFA?e=Hc0cOO).
 
 ## Pose sequence reconstruction
 
