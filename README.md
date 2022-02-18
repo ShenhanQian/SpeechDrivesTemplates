@@ -1,7 +1,5 @@
-# SpeechDrivesTemplates
+# Speech Drives Templates
 The official repo for the ICCV-2021 paper "Speech Drives Templates: Co-Speech Gesture Synthesis with Learned Templates".
-
-[[arxiv](https://arxiv.org/abs/2108.08020) / [video](https://youtu.be/yu-5gUHn6h8)]
 
 <p align="center">
   <img src="./iccv2021_sdt.jpg" width=500px/>
@@ -9,20 +7,15 @@ The official repo for the ICCV-2021 paper "Speech Drives Templates: Co-Speech Ge
 
 Our paper and this repo focus on upper-body pose generation from audio. To synthesize images from poses, please refer to this [Pose2Img](https://github.com/zyhbili/Pose2Img) repo.
 
-- [X] Code
-- [ ] Model
-- [ ] Data preparation
-
-
-## Package Hierarchy
+## Directory hierarchy
 
 ```
 |-- config
 |     |-- default.py
-|     |-- voice2pose_s2g_speech2gesture.yaml        # baseline: speech2gesture
-|     |-- voice2pose_sdt_vae_speech2gesture.yaml    # ours (VAE)
-|     |-- pose2pose_speech2gesture.yaml             # gesture reconstruction  
-|     `-- voice2pose_sdt_bp_speech2gesture.yaml     # ours (Backprop)
+|     |-- voice2pose_s2g.yaml        # baseline: speech2gesture
+|     |-- voice2pose_sdt_bp.yaml     # ours (Backprop)
+|     |-- voice2pose_sdt_vae.yaml    # ours (VAE)
+|     \-- pose2pose.yaml             # gesture reconstruction  
 |
 |-- core
 |     |-- datasets
@@ -30,8 +23,10 @@ Our paper and this repo focus on upper-body pose generation from audio. To synth
 |     |-- pipelines
 |     \-- utils
 |
-|-- dataset
-|     \-- speech2gesture  # create a soft link here
+|-- datasets
+|     \-- speakers
+|           |-- oliver
+|           \-- ...
 |
 |-- output
 |     \-- <date-config-tag>  # A directory for each experiment
@@ -40,85 +35,130 @@ Our paper and this repo focus on upper-body pose generation from audio. To synth
 
 ```
 
-## Setup the Dataset
-
-Datasets shuold be placed in the `dataset` directory. Just create a soft link like this:
-
-``` bash
-ln -s <path-to-SPEECH2GESTURE-dataset> ./dataset/speech2gesture
+## Installation
+To generate videos, you need `ffmpeg` in your system.
+```shell
+sudo apt install ffmpeg
 ```
 
-For your own dataset, you need to implement a subclass of `torch.utils.data.Dataset` in `core/datasets/custom_dataset.py`.
+Install Python packages
+```shell
+pip install -r requirements.txt
+```
 
-## Train
+## Dataset
+We use a subset (Oliver and Chemistry) of the [Speech2Gesture](https://people.eecs.berkeley.edu/~shiry/projects/speech2gesture/index.html) dataset and remove frames with bad human poses. We also collect data of two mandarine speakers (Luo and Xing).
 
-### Train a Model from Scratch
+To ease later research, we pack our processed data. Please download from this [link](https://shanghaitecheducn-my.sharepoint.com/:f:/g/personal/qianshh_shanghaitech_edu_cn/EhOVnrnCYS5KqDIkamXBJbgBLOzu8vEFGwy88jSRSNATFA?e=Hc0cOO) and organize them under `datasets/speech2gesture` as the above dirctory hierarchy. Note that these packages only provide 2d human pose sequences and corresponding audio clips. For video frames, please refer to the [Speech2Gesture](https://people.eecs.berkeley.edu/~shiry/projects/speech2gesture/index.html) dataset.
+
+Since our method address the entire upper body including the face and hands, the number of keypoints in our data is 137. For more details, please refer to [this](./pose_definition.md) document.
+
+## Training
+
+**Training** from scratch
 
 ``` bash
-python main.py --config_file configs/voice2pose_sdt_bp_speech2gesture.yaml \
-    --tag DEV \
+python main.py --config_file configs/voice2pose_sdt_bp.yaml \
+    --tag oliver \
+    DATASET.SPEAKER oliver \
     SYS.NUM_WORKERS 32
 ```
 
 - `--tag` set the name of the experiment which wil be displayed in the outputfile.
-- You can overwrite the any parameters defined in `voice2pose_default.py` by simply
+- You can overwrite any parameter defined in `configs/default.py` by simply
 adding it at the end of the command. The example above set `SYS.NUM_WORKERS` to 32 temporarily.
 
-### Resume Training from an Interrupted Experiment
+Resume **training** from an interrupted experiment
 
 ``` bash
-python main.py --config_file configs/voice2pose_sdt_bp_speech2gesture.yaml \
-    --resume_from <checkpoint-to-continue-from>
+python main.py --config_file configs/voice2pose_sdt_bp.yaml \
+    --resume_from <checkpoint-to-continue-from> \
+    DATASET.SPEAKER oliver
 ```
 
-- This command will load the `state_dict` from the checkpoint for both the model and the optimizer, and write results to the original directory that the checkpoint lies in.
+- With `--resume_from`, the program will load the `state_dict` from the checkpoint for both the model and the optimizer, and write results to the original directory that the checkpoint lies in.
 
-### Training from a pretrained model
+**Training** from a pretrained model
 
 ``` bash
-python main.py --config_file configs/voice2pose_sdt_bp_speech2gesture.yaml \
-    --pretrain_from <checkpoint-to-continue-from> \
-    --tag DEV
+python main.py --config_file configs/voice2pose_sdt_bp.yaml \
+    --pretrain_from <checkpoint-to-pretrain-from> \
+    --tag oliver \
+    DATASET.SPEAKER oliver
 ```
 
-- This command will only load the `state_dict` for the model, and write results to a new base directory.
+- With `--pretrain_from`, the program will only load the `state_dict` for the model, and write results to a new base directory.
 
-## Test
+## Evaluation
 
-To **test** the model, run this command:
+To **evaluate** a model, use `--test_only` and `--checkpoint` as follows
 
 ``` bash
-python main.py --config_file configs/voice2pose_sdt_bp_speech2gesture.yaml \
-    --tag DEV \
-    --test-only \
-    --checkpoint <path-to-checkpoint>
+python main.py --config_file configs/voice2pose_sdt_bp.yaml \
+    --tag oliver \
+    --test_only \
+    --checkpoint <path-to-checkpoint> \
+    DATASET.SPEAKER oliver
 ```
 
 ## Demo
 
-``` bash
-python main.py --config_file configs/voice2pose_sdt_bp_speech2gesture.yaml \
-    --tag <DEV> \
+To **evaluate** a model on an audio file, use `--demo_input` and `--checkpoint` as follows
+
+```bash
+python main.py --config_file configs/voice2pose_sdt_bp.yaml \
+    --tag oliver \
     --demo_input <audio.wav> \
     --checkpoint <path-to-checkpoint> \
-    DATASET.SPEAKER oliver \
-    SYS.VIDEO_FORMAT "['mp4']"
+    DATASET.SPEAKER oliver
 ```
 
-## Important Details
-### Dataset caching
-We turn on dataset caching (`DATASET.CACHING`) by default to speed up training. 
+## Pose sequence reconstruction
 
-> If you encounter errors in the dataloader like `RuntimeError: received 0 items of ancdata`, please increase `ulimit` by running the command `ulimit -n 262144`. (refer to this [issue](https://github.com/pytorch/pytorch/issues/973))
-### DataParallel and DistributedDataParallel
-We use single GPU (warpped by DataParallel) by default since it is fast enough with dataset caching. For multi-GPU training, we recommand using DistributedDataParallel (DDP) because it provide SyncBN across GPU cards. To enable DDP, set `SYS.DISTRIBUTED` to `True` and set `SYS.WORLD_SIZE` according to the number of GPUs.
-> When using DDP, assure that the `batch_size` can be divided exactly by `SYS.WORLD_SIZE`.
+To compute the FTD metric, you need to first train the VAE:
+
+```bash
+python main.py --config_file configs/pose2pose.yaml \
+    --tag oliver \
+    DATASET.SPEAKER oliver
+```
+
+Afterwards, you can compute FTD with the pretrained VAE's encoder by spotting `VOICE2POSE.POSE_ENCODER.AE_CHECKPOINT` as follows
+
+```bash
+python main.py --config_file configs/voice2pose_sdt_bp.yaml \
+    --tag oliver \
+    DATASET.SPEAKER oliver \
+    VOICE2POSE.POSE_ENCODER.AE_CHECKPOINT <path-to-VAE-checkpoint>
+```
+
+To use the VAE's encoding as template vectors when training, use change the config file and spot `VOICE2POSE.POSE_ENCODER.AE_CHECKPOINT` as follows
+
+```bash
+python main.py --config_file configs/voice2pose_sdt_vae.yaml \
+    --tag oliver \
+    DATASET.SPEAKER oliver \
+    VOICE2POSE.POSE_ENCODER.AE_CHECKPOINT <path-to-VAE-checkpoint>
+```
+
+
 
 ## Misc
-- To run any module other than the main files in the root directory, for example the `core\datasets\speech2gesture.py` file, you should run `python -m core.datasets.speech2gesture` rather than `python core\datasets\speech2gesture.py`. This is an interesting problem of Python's relative importing which deserves in-depth thinking.
+
 - We save a checkpoint and conduct validation after each epoch. You can change the interval in the config file.
-- We generate and save 2 videos in each epoch when training. During validation, we sample 8 videos for each epoch. These videos are saved in tensorborad (without sound) and mp4 (with sound). You can change the `SYS.VIDEO_FORMAT` parameter to select one or two of them.
-- We usually sett `NUM_WORKERS` to 32 for best performance. If you encounter any error about memory, try lower `NUM_WORKERS`.
+
+- We generate and save 2 videos in each epoch when training. During validation, we sample 8 videos for each epoch. These videos can be saved in tensorborad (without sound) and mp4 (with sound). You can change the `SYS.VIDEO_FORMAT` parameter to select one or two of them.
+
+- For multi-GPU training, we recommand using DistributedDataParallel (DDP) because it provide SyncBN across GPU cards. To enable DDP, set `SYS.DISTRIBUTED` to `True` and set `SYS.WORLD_SIZE` according to the number of GPUs.
+    > When using DDP, assure that the `batch_size` can be divided exactly by `SYS.WORLD_SIZE`.
+
+- We usually set `NUM_WORKERS` to 32 for best performance. If you encounter any error about memory, try lower `NUM_WORKERS`.
+
+
+- We also support dataset caching (`DATASET.CACHING`) to further speed up data loading.
+    > If you encounter errors in the dataloader like `RuntimeError: received 0 items of ancdata`, please increase `ulimit` by running the command `ulimit -n 262144`. (refer to this [issue](https://github.com/pytorch/pytorch/issues/973))
+
+- To run any module other than the main files in the root directory, for example the `core\datasets\speech2gesture.py` file, you should run `python -m core.datasets.speech2gesture` rather than `python core\datasets\speech2gesture.py`. This is an interesting problem of Python's relative importing.
 
 
 ```

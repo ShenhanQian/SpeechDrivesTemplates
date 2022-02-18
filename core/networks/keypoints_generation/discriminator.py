@@ -1,8 +1,6 @@
-import torch
-import torch.nn.functional as F
 from torch import nn
 
-from ..building_blocks import ConvNormRelu, FCNormRelu
+from ..building_blocks import ConvNormRelu
 
 
 class PoseSequenceDiscriminator(nn.Module):
@@ -22,29 +20,4 @@ class PoseSequenceDiscriminator(nn.Module):
         x = x.reshape(x.size(0), x.size(1), -1).transpose(1, 2)
         x = self.seq(x)
         x = x.squeeze(1)
-        return x
-
-class CodeDiscriminator(nn.Module):
-    def __init__(self, cfg):
-        super().__init__()
-        self.cfg = cfg
-        leaky = self.cfg.VOICE2POSE.POSE_DISCRIMINATOR.LEAKY_RELU
-        # norm = cfg.VOICE2POSE.GENERATOR.NORM
-        norm = 'BN'
-
-        self.seq = nn.Sequential(
-            FCNormRelu(cfg.VOICE2POSE.GENERATOR.CLIP_CODE.DIMENSION, 256, norm=norm, leaky=leaky),  # B, 256
-            FCNormRelu(256, 256, norm=norm, leaky=leaky),
-            FCNormRelu(256, 256, norm=norm, leaky=leaky),
-
-            FCNormRelu(256, 256, norm=norm, leaky=leaky),
-            FCNormRelu(256, 256, norm=norm, leaky=leaky),
-            FCNormRelu(256, 256, norm=norm, leaky=leaky),
-            FCNormRelu(256, 256, norm=norm, leaky=leaky),
-
-            nn.Linear(256, 1, bias=True)
-        )
-    
-    def forward(self, x):
-        x = self.seq(x)
         return x

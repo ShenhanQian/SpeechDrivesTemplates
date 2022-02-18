@@ -1,15 +1,13 @@
 from core.networks.keypoints_generation.generator import SequenceGeneratorCNN
 from core.networks.keypoints_generation.discriminator import PoseSequenceDiscriminator
-from core.networks.keypoints_generation.discriminator import CodeDiscriminator
-from core.networks.poses_reconstruction.autoencoder import Autoencoder, Poses_Encoder
+from core.networks.poses_reconstruction.autoencoder import Autoencoder, PoseSeqEncoder
 
 
 module_dict = {
     'SequenceGeneratorCNN': SequenceGeneratorCNN,
     'PoseSequenceDiscriminator': PoseSequenceDiscriminator,
-    'CodeDiscriminator': CodeDiscriminator,
     'Autoencoder': Autoencoder,
-    'Poses_Encoder': Poses_Encoder,
+    'PoseSeqEncoder': PoseSeqEncoder,
 }
 
 

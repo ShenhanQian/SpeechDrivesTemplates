@@ -1,7 +1,6 @@
 import logging
 import os
 import time
-from collections import OrderedDict
 import numpy as np
 import matplotlib as mpl
 from matplotlib import pyplot as plt
@@ -9,7 +8,6 @@ from sklearn import decomposition
 
 import torch
 from torch import nn
-import torch.nn.functional as F
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.nn.parallel.data_parallel import DataParallel
 import torchaudio
@@ -38,14 +36,7 @@ class Pose2PoseModel(nn.Module):
         self.register_buffer('clip_code_logvar', torch.zeros([num_train_samples, cfg.POSE2POSE.AUTOENCODER.CODE_DIM]))
 
         ## regression loss
-        if self.cfg.POSE2POSE.LOSS_REG == 'SmoothL1Loss':
-            self.reg_criterion = nn.SmoothL1Loss(reduction='none')
-        elif self.cfg.POSE2POSE.LOSS_REG == 'L1Loss':
-            self.reg_criterion = nn.L1Loss(reduction='none')
-        elif self.cfg.POSE2POSE.LOSS_REG == 'MSELoss':
-            self.reg_criterion = nn.MSELoss(reduction='none')
-        else:
-            raise NotImplementedError()
+        self.reg_criterion = nn.L1Loss(reduction='none')
     
     def forward(self, batch, return_loss=True, is_testing=False, interpolation_coeff=None):
         # input
@@ -73,11 +64,6 @@ class Pose2PoseModel(nn.Module):
         else:
             poses_pred_batch, mu, logvar = self.ae(poses_gt_batch, num_frames, mel)
 
-        if self.cfg.POSE2POSE.MOUSE_ONLY:
-            poses_pred_batch[:, :, :, :9+48] = 0
-            poses_pred_batch[:, :, :, 9+68:] = 0
-            poses_gt_batch[:, :, :, :9+48] = 0
-            poses_gt_batch[:, :, :, 9+68:] = 0
         losses_dict = {}
 
         ## autoencoder

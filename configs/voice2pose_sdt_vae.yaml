@@ -3,11 +3,10 @@ PIPELINE_TYPE: 'Voice2Pose'
 VOICE2POSE:
   GENERATOR:
     NAME: 'SequenceGeneratorCNN'
-    LOSS_REG: 'L1Loss'
     CLIP_CODE:
       DIMENSION: 32
-      EXTERNAL_CODE: False
+      EXTERNAL_CODE: True
 
 DATASET:
-  NAME: 'speech2gesture'
-  ROOT_DIR: 'datasets/speech2gesture'
+  NAME: 'GestureDataset'
+  ROOT_DIR: 'datasets/speakers'

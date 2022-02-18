@@ -1,11 +1,8 @@
 import numpy as np
 import cv2
 import os
-from torch._C import device
 from tqdm import tqdm
 import csv
-from core.datasets.speech2gesture import Speech2GestureDataset
-import torch
 
 
 def draw_landmarks(img, kps, color=(0,255,0), size=2, show_idx=False, edge_list=None, with_confidence_score=False):
@@ -211,11 +208,8 @@ def vis_relative_pose_pair_clip(relative_poses_pred, relative_poses_gt, canvas_s
 
 
 if __name__ == "__main__":
-    dataset_root = 'datasets/speech2gesture/'
-    # speaker = 'almaram'
+    dataset_root = 'datasets/speakers/'
     speaker = 'oliver'
-    # speaker = 'ellen'
-    # speaker = 'conan'
     num_kp = 137
 
     vis_train_csv_dir(dataset_root, speaker, num_kp, align_image=False, with_confidence_score=True)

@@ -1,8 +1,8 @@
-from core.datasets.speech2gesture import Speech2GestureDataset
+from core.datasets.gesture_dataset import GestureDataset
 
 
 module_dict = {
-    'speech2gesture': Speech2GestureDataset,
+    'GestureDataset': GestureDataset,
 }
 
 

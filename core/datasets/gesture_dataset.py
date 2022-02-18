@@ -8,10 +8,10 @@ from torch.utils.data import Dataset, DataLoader
 from torch.multiprocessing import Manager
 
 from ..utils.audio_processing import parse_audio_length, crop_pad_audio
-from .speech2gesture_stat import *
+from .speakers_stat import *
 
 
-class Speech2GestureDataset(Dataset):
+class GestureDataset(Dataset):
     """Speech2Gesture dataset."""
 
     def __init__(self, root_dir, speaker, split, cfg, demo_input=None):
@@ -21,15 +21,16 @@ class Speech2GestureDataset(Dataset):
             root_dir (string): Directory with all the images.
         """
         self.cfg = cfg.DATASET
+        self.root_dir = os.path.join(root_dir, speaker)
         self.split = split
         assert speaker is not None, 'The speaker is "None"!'
         self.speaker = speaker
 
         if split == 'train':
-            self.clips = self.get_csv_file(root_dir, speaker)
+            self.clips = self.get_csv_file(self.root_dir)
             self.clips = self.clips[self.clips['dataset'] == 'train']
         elif split == 'val':
-            self.clips = self.get_csv_file(root_dir, speaker)
+            self.clips = self.get_csv_file(self.root_dir)
             self.clips = self.clips[self.clips['dataset'] == 'dev']
         elif split == 'demo':
             if len(demo_input.split()) == 1 and os.path.isdir(demo_input):
@@ -91,8 +92,7 @@ class Speech2GestureDataset(Dataset):
             clip = self.clips.iloc[idx]
 
             speaker = clip['speaker']
-            audio_path = clip['audio_fn']
-            arr = np.load(clip['pose_fn'])
+            arr = np.load(os.path.join(self.root_dir, clip['pose_fn']), mmap_mode=None)
 
             audio = arr['audio']
             audio_length, num_frames = parse_audio_length(self.cfg.AUDIO_LENGTH, self.cfg.AUDIO_SR, self.cfg.FPS)
@@ -118,24 +118,20 @@ class Speech2GestureDataset(Dataset):
                 'clip_index': idx,
                 'poses': normalized_relative_poses,
                 'poses_score': poses_score,
-                'audio_path': audio_path,
                 'speaker_stat': speaker_stat,
                 'anchors': {
                     'hand_root_l': self.hand_root_l,
                     'hand_root_r': self.hand_root_r,
                     'head_root': self.head_root},
-                # 'imgs_path': imgs_path,
             }
             if self.cfg.CACHING:
                 self.cache_dict[idx] = sample
         return sample
 
-    def get_csv_file(self, root_dir, speaker):
-        csv_path = os.path.join(root_dir, f'train_{speaker}_137.csv')
+    def get_csv_file(self, root_dir):
+        csv_path = os.path.join(root_dir, f'processed_137.csv')
         if not os.path.exists(csv_path):
-            csv_path = os.path.join(root_dir, f'train_{speaker}_137_3.csv')
-        if not os.path.exists(csv_path):
-            raise FileNotFoundError('No csv file for %s in directory %s!' % (speaker, root_dir))
+            raise FileNotFoundError('No csv file: %s' % csv_path)
         csv_file = pd.read_csv(csv_path)
         return csv_file
 
@@ -258,8 +254,8 @@ if __name__ == "__main__":
     cfg.freeze()
     print(cfg)
 
-    dataset = Speech2GestureDataset(cfg.DATASET.ROOT_DIR, cfg.DATASET.SPEAKER, 'train', cfg)
-    # dataset = Speech2GestureDataset(cfg.DATASET.ROOT_DIR, cfg.DATASET.SPEAKER, 'val', cfg)
+    dataset = GestureDataset(cfg.DATASET.ROOT_DIR, cfg.DATASET.SPEAKER, 'train', cfg)
+    dataset = GestureDataset(cfg.DATASET.ROOT_DIR, cfg.DATASET.SPEAKER, 'val', cfg)
     dataloader = DataLoader(dataset, batch_size=1,
                             shuffle=False, num_workers=64)
 

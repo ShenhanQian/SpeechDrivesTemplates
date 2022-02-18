@@ -9,7 +9,6 @@ from sklearn import decomposition
 
 import torch
 from torch import nn
-import torch.nn.functional as F
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.nn.parallel.data_parallel import DataParallel
 import torchaudio
@@ -30,23 +29,11 @@ class Voice2PoseModel(nn.Module):
             n_fft=512, f_min=55,
             f_max=7500.0, n_mels=80)
         
-        self.mel_transfm_lip = torchaudio.transforms.MelSpectrogram(
-            win_length=800, hop_length=200,
-            n_fft=800, f_min=55,
-            f_max=7600.0, n_mels=80)
-
         # Generator
         self.netG = get_model(cfg.VOICE2POSE.GENERATOR.NAME)(cfg)
 
         ## regression loss
-        if self.cfg.VOICE2POSE.GENERATOR.LOSS_REG == 'SmoothL1Loss':
-            self.reg_criterion = nn.SmoothL1Loss(reduction='none')
-        elif self.cfg.VOICE2POSE.GENERATOR.LOSS_REG == 'L1Loss':
-            self.reg_criterion = nn.L1Loss(reduction='none')
-        elif self.cfg.VOICE2POSE.GENERATOR.LOSS_REG == 'MSELoss':
-            self.reg_criterion = nn.MSELoss(reduction='none')
-        else:
-            raise NotImplementedError()
+        self.reg_criterion = nn.L1Loss(reduction='none')
 
         if cfg.VOICE2POSE.GENERATOR.CLIP_CODE.DIMENSION is not None:
 
@@ -87,25 +74,11 @@ class Voice2PoseModel(nn.Module):
         # pose encoder
         if self.cfg.VOICE2POSE.POSE_ENCODER.NAME is not None:
             self.pose_encoder = get_model(cfg.VOICE2POSE.POSE_ENCODER.NAME)(cfg)
-            assert cfg.VOICE2POSE.POSE_ENCODER.AE_CHECKPOINT is not None
-            map_location = {'cuda:0' : 'cuda:%d' % rank}
-            ckpt = torch.load(cfg.VOICE2POSE.POSE_ENCODER.AE_CHECKPOINT, map_location=map_location)
-            state_dict = OrderedDict(
-                map(lambda x: (x[0].replace('module.ae.encoder.', ''), x[1]), 
-                    filter(lambda x: 'encoder' in x[0],
-                        ckpt['model_state_dict'].items())))
-            self.pose_encoder.load_state_dict(state_dict)
 
         # Pose Discriminator
         if self.cfg.VOICE2POSE.POSE_DISCRIMINATOR.NAME is not None:
             self.netD_pose = get_model(cfg.VOICE2POSE.POSE_DISCRIMINATOR.NAME)(cfg)
             self.pose_gan_criterion = nn.MSELoss()
-        
-        # Code Discriminator
-        if self.cfg.VOICE2POSE.CODE_DISCRIMINATOR.NAME is not None:
-            assert self.cfg.VOICE2POSE.GENERATOR.CLIP_CODE.DIMENSION is not None
-            self.netD_code = get_model(cfg.VOICE2POSE.CODE_DISCRIMINATOR.NAME)(cfg)
-            self.code_gan_criterion = nn.MSELoss()
         
     def forward(self, batch, dataset, return_loss=True, interpolation_coeff=None):
         # input
@@ -131,8 +104,6 @@ class Voice2PoseModel(nn.Module):
                     else:
                         mu_gt, logvar_gt = self.pose_encoder(dataset.transform_normalized_parted2global(poses_gt_batch, speaker))
                     condition_code = mu_gt
-                elif self.cfg.VOICE2POSE.GENERATOR.CLIP_CODE.TEST_WITH_CODE_MAPPER:
-                    condition_code = None
                 elif self.cfg.DEMO.CODE_INDEX is not None:
                     assert not return_loss, 'WARNING: Do not set "DEMO.CODE_INDEX" in train or test mode!'
                     assert 0 <= self.cfg.DEMO.CODE_INDEX < self.clips_code.size(0)
@@ -152,25 +123,17 @@ class Voice2PoseModel(nn.Module):
 
         # forward
         mel = self.mel_transfm(audio)
-        poses_pred_batch, code_sequence_gen = self.netG(mel, num_frames, condition_code)
+        poses_pred_batch = self.netG(mel, num_frames, condition_code)
         
         results_dict = {
             'poses_pred_batch': poses_pred_batch,
             'condition_code': condition_code,
-            'code_sequence_gen': code_sequence_gen,
             }
         if not return_loss:
             return results_dict
         else:
             results_dict['poses_gt_batch'] = poses_gt_batch
 
-        if self.cfg.VOICE2POSE.GENERATOR.MOUSE_ONLY:
-            poses_pred_batch[:, :, :, :9+48] = 0
-            poses_pred_batch[:, :, :, 9+68:] = 0
-            poses_gt_batch[:, :, :, :9+48] = 0
-            poses_gt_batch[:, :, :, 9+68:] = 0
-            poses_score_batch[:, :, :, :9+48] = 0
-            poses_score_batch[:, :, :, 9+68:] = 0
         losses_dict = {}
 
         ## netG
@@ -180,22 +143,6 @@ class Voice2PoseModel(nn.Module):
         losses_dict['G_reg_loss'] = G_reg_loss
         G_loss = G_reg_loss.clone()
 
-        ### Code Sequence regularization
-        if code_sequence_gen is not None:
-            code_sequence_diff = torch.norm(code_sequence_gen[:, :, 1:] - code_sequence_gen[:, :, :-1], p=2, dim=1)
-            
-            G_seq_diff_loss = code_sequence_diff.mean() * self.cfg.VOICE2POSE.GENERATOR.LAMBDA_SEQ_DIFF
-            losses_dict['G_seq_diff_loss'] = G_seq_diff_loss
-            G_loss = G_loss + G_seq_diff_loss
-
-            batched_code_seq = code_sequence_gen.permute(0,2,1).reshape(-1, code_sequence_gen.shape[1])
-            batched_code_seq_mu = batched_code_seq.mean(dim=0)
-            batched_code_seq_var = batched_code_seq.var(dim=0)
-            if (batched_code_seq_var!=0).all():
-                G_code_seq_kl_loss = 0.5 * (-torch.log(batched_code_seq_var) + batched_code_seq_mu**2 + batched_code_seq_var - 1).mean() * self.cfg.VOICE2POSE.GENERATOR.LAMBDA_CODE_SEQ_KL
-                losses_dict['G_code_seq_kl_loss'] = G_code_seq_kl_loss
-                G_loss = G_loss + G_code_seq_kl_loss
-        
         ### ClipCode regularization
         if condition_code is not None:
             if self.cfg.VOICE2POSE.GENERATOR.CLIP_CODE.FRAME_VARIANT:
@@ -260,36 +207,6 @@ class Voice2PoseModel(nn.Module):
                 'pose_score_real': pose_score_real.mean(),
                 })
         
-        ## netD_code
-        if hasattr(self, 'netD_code'):
-            if self.cfg.VOICE2POSE.CODE_DISCRIMINATOR.SEQUENCE:
-                # code_fake = code_sequence_gen.mean(-1)
-                code_fake = code_sequence_gen.permute(0,2,1).reshape(-1, code_sequence_gen.shape[1])
-                code_real = mu_gt
-            else:
-                code_fake = torch.cat([mu_pred, logvar_pred], dim=1)
-                code_real = torch.cat([mu_gt, logvar_gt], dim=1)
-       
-            code_score_real = self.netD_code(code_real)
-            code_score_fake = self.netD_code(code_fake)
-            code_score_fake_deatchG = self.netD_code(code_fake.detach())
-            
-            G_code_gan_loss = self.code_gan_criterion(code_score_fake, torch.ones_like(code_score_fake)) * self.cfg.VOICE2POSE.CODE_DISCRIMINATOR.LAMBDA_GAN
-            losses_dict['G_code_gan_loss'] = G_code_gan_loss
-            G_loss = G_loss + G_code_gan_loss
-            losses_dict['G_loss'] = G_loss
-
-            D_code_gan_fake_loss = self.code_gan_criterion(code_score_fake_deatchG, torch.zeros_like(code_score_fake_deatchG))
-            D_code_gan_real_loss = self.code_gan_criterion(code_score_real, torch.ones_like(code_score_real))
-            D_code_gan_loss = (D_code_gan_real_loss + D_code_gan_fake_loss) * self.cfg.VOICE2POSE.CODE_DISCRIMINATOR.LAMBDA_GAN
-
-            losses_dict.update({
-                'D_code_gan_loss': D_code_gan_loss,
-                'code_score_fake': code_score_fake.mean(),
-                'code_score_real': code_score_real.mean(),
-                'code_sequence_gen_std': code_sequence_gen.std(-1).mean(),
-                })
-        
         return losses_dict, results_dict
 
 class Voice2Pose(Trainer):
@@ -313,17 +230,17 @@ class Voice2Pose(Trainer):
             else:
                 self.model.load_state_dict(state_dict, strict=False)
         
-        # pose encoder
+        # # pose encoder
         if self.cfg.VOICE2POSE.POSE_ENCODER.NAME is not None:
-            assert cfg.VOICE2POSE.POSE_ENCODER.AE_CHECKPOINT is not None
-            map_location = {'cuda:0' : 'cuda:%d' % self.get_rank()}
-            ckpt = torch.load(cfg.VOICE2POSE.POSE_ENCODER.AE_CHECKPOINT, map_location=map_location)
-            state_dict = OrderedDict(
-                map(lambda x: (x[0].replace('module.ae.encoder.', ''), x[1]), 
-                    filter(lambda x: 'encoder' in x[0],
-                        ckpt['model_state_dict'].items())))
-            self.model.module.pose_encoder.load_state_dict(state_dict)
-    
+            if cfg.VOICE2POSE.POSE_ENCODER.AE_CHECKPOINT is not None:
+                map_location = {'cuda:0' : 'cuda:%d' % self.get_rank()}
+                ckpt = torch.load(cfg.VOICE2POSE.POSE_ENCODER.AE_CHECKPOINT, map_location=map_location)
+                state_dict = OrderedDict(
+                    map(lambda x: (x[0].replace('module.ae.encoder.', ''), x[1]), 
+                        filter(lambda x: 'encoder' in x[0],
+                            ckpt['model_state_dict'].items())))
+                self.model.module.pose_encoder.load_state_dict(state_dict)
+
     def setup_optimizer(self, checkpoint=None, last_epoch=-1):
         # Optimizer for generator
         netG_parameters = self.model.module.netG.parameters() if isinstance(self.model, (DDP, DataParallel)) \
@@ -349,17 +266,6 @@ class Voice2Pose(Trainer):
             if self.cfg.TRAIN.LR_SCHEDULER:
                 self.schedulers['schedulerD_pose'] = torch.optim.lr_scheduler.MultiStepLR(
                     self.optimizers['optimizerD_pose'], [self.cfg.TRAIN.NUM_EPOCHS-10, self.cfg.TRAIN.NUM_EPOCHS-2], gamma=0.1, last_epoch=last_epoch)
-        
-        # Optimizer for code discriminator
-        if self.cfg.VOICE2POSE.CODE_DISCRIMINATOR.NAME is not None:
-            netD_code_parameters = self.model.module.netD_code.parameters() if isinstance(self.model, (DDP, DataParallel)) \
-                else self.model.netD_code.parameters()
-            self.optimizers['optimizerD_code'] = torch.optim.Adam(netD_code_parameters, lr=self.cfg.TRAIN.LR)
-            if checkpoint is not None:
-                self.optimizers['optimizerD_code'].load_state_dict(checkpoint['optimizerD_code_state_dict'])
-            if self.cfg.TRAIN.LR_SCHEDULER:
-                self.schedulers['schedulerD_code'] = torch.optim.lr_scheduler.MultiStepLR(
-                    self.optimizers['optimizerD_code'], [self.cfg.TRAIN.NUM_EPOCHS-10, self.cfg.TRAIN.NUM_EPOCHS-2], gamma=0.1, last_epoch=last_epoch)
         
         # Optimizer for clip code
         if self.cfg.VOICE2POSE.GENERATOR.CLIP_CODE.DIMENSION is not None and not self.cfg.VOICE2POSE.GENERATOR.CLIP_CODE.EXTERNAL_CODE:
@@ -402,11 +308,6 @@ class Voice2Pose(Trainer):
             losses_dict['D_pose_gan_loss'].backward()
             self.optimizers['optimizerD_pose'].step()
         
-        if 'optimizerD_code' in self.optimizers:
-            self.optimizers['optimizerD_code'].zero_grad()
-            losses_dict['D_code_gan_loss'].backward()
-            self.optimizers['optimizerD_code'].step()
-
         if self.cfg.SYS.DISTRIBUTED:
             self.reduce_tensor_dict(losses_dict)
 

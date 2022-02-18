@@ -1,12 +1,9 @@
-import torch
 from torch import nn
-import torch.nn.functional as F
 
 
 class ConvNormRelu(nn.Module):
     def __init__(self, conv_type='1d', in_channels=3, out_channels=64, downsample=False,
-                 kernel_size=None, stride=None, padding=None, norm='BN', num_groups=1, 
-                 leaky=False):
+                 kernel_size=None, stride=None, padding=None, norm='BN', leaky=False):
         super().__init__()
         if kernel_size is None:
             if downsample:
@@ -27,8 +24,6 @@ class ConvNormRelu(nn.Module):
                 self.norm = nn.BatchNorm2d(out_channels)
             elif norm == 'IN':
                 self.norm = nn.InstanceNorm2d(out_channels)
-            elif norm == 'GN':
-                self.norm = nn.GroupNorm(num_groups, out_channels)
             else:
                 raise NotImplementedError
         elif conv_type == '1d':
@@ -44,8 +39,6 @@ class ConvNormRelu(nn.Module):
                 self.norm = nn.BatchNorm1d(out_channels)
             elif norm == 'IN':
                 self.norm = nn.InstanceNorm1d(out_channels)
-            elif norm == 'GN':
-                self.norm = nn.GroupNorm(num_groups, out_channels)
             else:
                 raise NotImplementedError
         nn.init.kaiming_normal_(self.conv.weight)
