@@ -1,4 +1,5 @@
 # Speech Drives Templates
+
 The official repo for the ICCV-2021 paper "Speech Drives Templates: Co-Speech Gesture Synthesis with Learned Templates".
 
 <p align="center">
@@ -26,6 +27,7 @@ Our paper and this repo focus on upper-body pose generation from audio. To synth
 |-- datasets
 |     \-- speakers
 |           |-- oliver
+|           |-- kubinec
 |           \-- ...
 |
 |-- output
@@ -36,18 +38,22 @@ Our paper and this repo focus on upper-body pose generation from audio. To synth
 ```
 
 ## Installation
+
 To generate videos, you need `ffmpeg` in your system.
+
 ```shell
 sudo apt install ffmpeg
 ```
 
 Install Python packages
+
 ```shell
 pip install -r requirements.txt
 ```
 
 ## Dataset
-We use a subset (Oliver and Chemistry) of the [Speech2Gesture](https://people.eecs.berkeley.edu/~shiry/projects/speech2gesture/index.html) dataset and remove frames with bad human poses. We also collect data of two mandarine speakers (Luo and Xing).
+
+We use a subset (Oliver and Kubinec) of the [Speech2Gesture](https://people.eecs.berkeley.edu/~shiry/projects/speech2gesture/index.html) dataset and remove frames with bad human poses. We also collect data of two mandarine speakers (Luo and Xing).
 
 To ease later research, we pack our processed data. Please download from this [link](https://shanghaitecheducn-my.sharepoint.com/:f:/g/personal/qianshh_shanghaitech_edu_cn/EhOVnrnCYS5KqDIkamXBJbgBLOzu8vEFGwy88jSRSNATFA?e=Hc0cOO) and organize them under `datasets/speech2gesture` as the above dirctory hierarchy. Note that these packages only provide 2d human pose sequences and corresponding audio clips. For video frames, please refer to the [Speech2Gesture](https://people.eecs.berkeley.edu/~shiry/projects/speech2gesture/index.html) dataset.
 
@@ -142,8 +148,6 @@ python main.py --config_file configs/voice2pose_sdt_vae.yaml \
     DATASET.SPEAKER oliver \
     VOICE2POSE.POSE_ENCODER.AE_CHECKPOINT <path-to-VAE-checkpoint>
 ```
-
-
 
 ## Misc
 
