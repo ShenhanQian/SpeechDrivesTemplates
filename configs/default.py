@@ -46,8 +46,8 @@ _C.POSE2POSE.LAMBDA_KL = 1.0
 _C.POSE2POSE.LOSS_REG = None
 
 _C.DATASET = CN()
-_C.DATASET.NAME = 'speech2gesture'
-_C.DATASET.ROOT_DIR = 'datasets/speech2gesture'
+_C.DATASET.NAME = 'GestureDataset'
+_C.DATASET.ROOT_DIR = 'datasets/speakers'
 _C.DATASET.SUBSET = None
 _C.DATASET.NUM_LANDMARKS = 121
 _C.DATASET.HIERARCHICAL_POSE = True

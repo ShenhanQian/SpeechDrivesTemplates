@@ -55,7 +55,7 @@ pip install -r requirements.txt
 
 We use a subset (Oliver and Kubinec) of the [Speech2Gesture](https://people.eecs.berkeley.edu/~shiry/projects/speech2gesture/index.html) dataset and remove frames with bad human poses. We also collect data of two mandarine speakers (Luo and Xing).
 
-To ease later research, we pack our processed data. Please download from this [link](https://shanghaitecheducn-my.sharepoint.com/:f:/g/personal/qianshh_shanghaitech_edu_cn/EhOVnrnCYS5KqDIkamXBJbgBLOzu8vEFGwy88jSRSNATFA?e=Hc0cOO) and organize them under `datasets/speech2gesture` as the above dirctory hierarchy. Note that these packages only provide 2d human pose sequences and corresponding audio clips. For video frames, please refer to the [Speech2Gesture](https://people.eecs.berkeley.edu/~shiry/projects/speech2gesture/index.html) dataset.
+To ease later research, we pack our processed data. Please download from this [link](https://shanghaitecheducn-my.sharepoint.com/:f:/g/personal/qianshh_shanghaitech_edu_cn/EhOVnrnCYS5KqDIkamXBJbgBLOzu8vEFGwy88jSRSNATFA?e=Hc0cOO) and organize them under `datasets/speakers` as the above dirctory hierarchy. Note that these packages only provide 2d human pose sequences and corresponding audio clips. For video frames, please refer to the [Speech2Gesture](https://people.eecs.berkeley.edu/~shiry/projects/speech2gesture/index.html) dataset.
 
 Since our method address the entire upper body including the face and hands, the number of keypoints in our data is 137. For more details, please refer to [this](./pose_definition.md) document.
 
@@ -164,7 +164,7 @@ python main.py --config_file configs/voice2pose_sdt_vae.yaml \
 - We also support dataset caching (`DATASET.CACHING`) to further speed up data loading.
     > If you encounter errors in the dataloader like `RuntimeError: received 0 items of ancdata`, please increase `ulimit` by running the command `ulimit -n 262144`. (refer to this [issue](https://github.com/pytorch/pytorch/issues/973))
 
-- To run any module other than the main files in the root directory, for example the `core\datasets\speech2gesture.py` file, you should run `python -m core.datasets.speech2gesture` rather than `python core\datasets\speech2gesture.py`. This is an interesting problem of Python's relative importing.
+- To run any module other than the main files in the root directory, for example the `core\datasets\gesture_dataset.py` file, you should run `python -m core.datasets.gesture_dataset` rather than `python core\datasets\gesture_dataset.py`. This is an interesting problem of Python's relative importing.
 
 
 ```

@@ -12,14 +12,7 @@ from .speakers_stat import *
 
 
 class GestureDataset(Dataset):
-    """Speech2Gesture dataset."""
-
     def __init__(self, root_dir, speaker, split, cfg, demo_input=None):
-        """
-        Args:
-            csv_file (string): Path to the csv file with annotations.
-            root_dir (string): Directory with all the images.
-        """
         self.cfg = cfg.DATASET
         self.root_dir = os.path.join(root_dir, speaker)
         self.split = split
@@ -245,12 +238,11 @@ class GestureDataset(Dataset):
 
 if __name__ == "__main__":
     from configs.default import get_cfg_defaults
-    from tqdm import tqdm
     from core.utils.keypoint_visualization import vis_relative_pose_clip
     import cv2
 
     cfg = get_cfg_defaults()
-    cfg.merge_from_file('configs/voice2pose_speech2gesture.yaml')
+    cfg.merge_from_file('configs/voice2pose_sdt_bp.yaml')
     cfg.freeze()
     print(cfg)
 
