@@ -60,7 +60,7 @@ To ease later research, we pack our processed data. Please download from this [l
 Since our method address the entire upper body including the face and hands, the number of keypoints in our data is 137. For more details, please refer to [this](./pose_definition.md) document.
 
 ### Custom dataset
-To build a dataset from custom videos, we provide reference scripts in `data_reprocess`:
+To build a dataset from custom videos, we provide reference scripts in `data_preprocess/`:
 ```
 # ==== video processing ====
 1_1_change_fps.py           # we use fps=15 by default
@@ -80,7 +80,7 @@ To build a dataset from custom videos, we provide reference scripts in `data_rep
 4_2_parse_mean_std_npz.py   # parse the above npy and print out for `speakers_stat.py`
 ```
 
-> The step 2_3 is optional. It rescales the keypoints so that a new speaker has the same shoulder width as Oliver, and then you can simply set the `scale_factor` in `speakers_stat.py` to 1.0.
+> The step 2_3 is optional. It rescales the keypoints so that a new speaker has the same shoulder width as Oliver, and then you can simply copy the `scale_factor`  of Oliver for the new speaker in `speakers_stat.py`.
 
 ## Training
 
