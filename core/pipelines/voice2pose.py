@@ -74,6 +74,7 @@ class Voice2PoseModel(nn.Module):
         # pose encoder
         if self.cfg.VOICE2POSE.POSE_ENCODER.NAME is not None:
             self.pose_encoder = get_model(cfg.VOICE2POSE.POSE_ENCODER.NAME)(cfg)
+            self.pose_encoder.eval()
 
         # Pose Discriminator
         if self.cfg.VOICE2POSE.POSE_DISCRIMINATOR.NAME is not None:
@@ -87,7 +88,6 @@ class Voice2PoseModel(nn.Module):
         clip_indices = batch['clip_index'].cuda()
         num_frames = int(batch['num_frames'][0].item())
         poses_gt_batch = batch['poses'].cuda() if return_loss else None
-        poses_score_batch = batch['poses_score'].cuda() if return_loss else None
 
         if self.cfg.VOICE2POSE.GENERATOR.CLIP_CODE.DIMENSION is not None:
             if self.training:
@@ -160,20 +160,20 @@ class Voice2PoseModel(nn.Module):
         
         ## pose encoder
         if self.cfg.VOICE2POSE.POSE_ENCODER.NAME is not None:
-            self.pose_encoder.eval()
-            if self.cfg.DATASET.HIERARCHICAL_POSE:
-                mu_pred, logvar_pred = self.pose_encoder(poses_pred_batch)
-                mu_gt, logvar_gt = self.pose_encoder(poses_gt_batch)
-            else:
-                mu_pred, logvar_pred = self.pose_encoder(dataset.transform_normalized_parted2global(poses_pred_batch, speaker))
-                mu_gt, logvar_gt = self.pose_encoder(dataset.transform_normalized_parted2global(poses_gt_batch, speaker))
+            with torch.no_grad():
+                if self.cfg.DATASET.HIERARCHICAL_POSE:
+                    mu_pred, logvar_pred = self.pose_encoder(poses_pred_batch)
+                    mu_gt, logvar_gt = self.pose_encoder(poses_gt_batch)
+                else:
+                    mu_pred, logvar_pred = self.pose_encoder(dataset.transform_normalized_parted2global(poses_pred_batch, speaker))
+                    mu_gt, logvar_gt = self.pose_encoder(dataset.transform_normalized_parted2global(poses_gt_batch, speaker))
 
-            results_dict.update({
-                'mu_pred': mu_pred,
-                'mu_gt': mu_gt,
-                'logvar_pred': logvar_pred,
-                'logvar_gt': logvar_gt,
-                })
+                results_dict.update({
+                    'mu_pred': mu_pred,
+                    'mu_gt': mu_gt,
+                    'logvar_pred': logvar_pred,
+                    'logvar_gt': logvar_gt,
+                    })
 
         ## netD_pose
         if hasattr(self, 'netD_pose'):
@@ -220,7 +220,7 @@ class Voice2Pose(Trainer):
 
         self.model = Voice2PoseModel(cfg, state_dict, self.num_train_samples, self.get_rank()).cuda()
         if self.cfg.SYS.DISTRIBUTED:
-            self.model = DDP(self.model, device_ids=[self.get_rank()])
+            self.model = DDP(self.model, device_ids=[self.get_rank()], find_unused_parameters=True)
         else:
             self.model = DataParallel(self.model)
 
@@ -230,7 +230,7 @@ class Voice2Pose(Trainer):
             else:
                 self.model.load_state_dict(state_dict, strict=False)
         
-        # # pose encoder
+        # pose encoder
         if self.cfg.VOICE2POSE.POSE_ENCODER.NAME is not None:
             if cfg.VOICE2POSE.POSE_ENCODER.AE_CHECKPOINT is not None:
                 map_location = {'cuda:0' : 'cuda:%d' % self.get_rank()}
@@ -424,8 +424,8 @@ class Voice2Pose(Trainer):
         lip_sync_error_n = torch.abs(lip_open_pred_n - lip_open_gt_n)
         
         metrics_dict = {
-            'L2_dist': L2_dist,
-            'lip_sync_error_n': lip_sync_error_n,
+            'L2_dist': L2_dist.mean(),
+            'lip_sync_error_n': lip_sync_error_n.mean(),
         }
         return metrics_dict
     
