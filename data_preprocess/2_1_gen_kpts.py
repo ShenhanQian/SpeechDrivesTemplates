@@ -44,7 +44,7 @@ def get_keypoints(frame_dir,folder,img_path,pose_dir):
     datum = op.Datum()
     imageToProcess = cv2.imread(imageToProcess)
     datum.cvInputData = imageToProcess
-    opWrapper.emplaceAndPop([datum])
+    opWrapper.emplaceAndPop(op.VectorDatum([datum]))
 
     if datum.poseKeypoints.shape == (1, 25, 3) and datum.faceKeypoints.shape == (1, 70, 3) and datum.handKeypoints[0].shape == (1, 21, 3) and datum.handKeypoints[1].shape == (1, 21, 3):
         # only collect frames with complete pose predictions
@@ -79,7 +79,7 @@ if __name__=="__main__":
                 └── xxxxxx.npy
     """
     
-    assert len(sys.argv == 2)
+    assert len(sys.argv) == 2
     base_dir = sys.argv[1]
 
     frame_dir = f"{base_dir}/frames/"
