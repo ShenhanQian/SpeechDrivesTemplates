@@ -24,6 +24,11 @@ parser.add_argument('--restart', action="store_true", help="By default this code
                                                            "using existing csv files. Use argument --restart if want"
                                                            "to start the generate_clips process from the beginning.")
 
+# argument to be set by user
+parser.add_argument('-fi', '--start_frame_idx', type=int, default=80, help="The script will desert all the frames "
+                                                                           "before start_frame_idx, because some video"
+                                                                           "may have an introduction part that is not"
+                                                                           "relevant to our task.")
 # arguments do not need to change
 parser.add_argument('-nf', '--num_frames', type=int, default=FRAMES_PER_SAMPLE)
 parser.add_argument("-d", "--debug", help="debug mode", action="store_true")
@@ -53,8 +58,11 @@ if not os.path.exists(TMPCSV_DIR_PATH):
 assert os.path.exists(FRAME_DIR_PATH)
 assert os.path.exists(VIDEO_DIR_PATH)
 assert os.path.exists(POSE_DIR_PATH)
+
+START_FRAME_IDX = args.start_frame_idx
+
 print(f"Please confirm the paths: \nDATA_DIR_NAME: {DATA_DIR_NAME} \nFRAME_DIR_NAME: {FRAME_DIR_NAME} "
-      f"\nPOSE_DIR_NAME: {POSE_DIR_NAME} \nVIDEO_DIR_NAME: {VIDEO_DIR_NAME}")
+      f"\nPOSE_DIR_NAME: {POSE_DIR_NAME} \nVIDEO_DIR_NAME: {VIDEO_DIR_NAME} \nSTART_FRAME_IDX: {START_FRAME_IDX}")
 # input("Press any key to confirm, else press Ctrl+c to abort.")
 
 AUDIO_FN_TEMPLATE = os.path.join(args.base_dataset_path, f'%s/{DATA_DIR_NAME}/audio/%s-%s-%s.wav')
@@ -223,7 +231,7 @@ if __name__ == "__main__":
     # start_frame_idx, total_length, video_nm
     ls_args = [{"video_nm": i,
                 "total_length": len(os.listdir(os.path.join(FRAME_DIR_PATH, i))),
-                "start_frame_idx": 80,
+                "start_frame_idx": START_FRAME_IDX,
                 "process_idx": idx
                 } for idx, i in enumerate(ls_vid)]
 
