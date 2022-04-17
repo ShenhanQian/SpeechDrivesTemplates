@@ -82,7 +82,7 @@ To build a dataset from custom videos, we provide reference scripts in `data_pre
 
 > The step 2_3 is optional. It rescales the keypoints so that a new speaker has the same shoulder width as Oliver, and then you can simply copy the `scale_factor`  of Oliver for the new speaker in `speakers_stat.py`.
 
-## Training
+## Training SDT-BP
 
 **Training** from scratch
 
@@ -144,9 +144,9 @@ python main.py --config_file configs/voice2pose_sdt_bp.yaml \
 
 You can find our checkpoint [here](https://shanghaitecheducn-my.sharepoint.com/:f:/g/personal/qianshh_shanghaitech_edu_cn/EhOVnrnCYS5KqDIkamXBJbgBLOzu8vEFGwy88jSRSNATFA?e=Hc0cOO).
 
-## Pose sequence reconstruction
-
-To compute the FTD metric, you need to first train the VAE:
+## FTD computation and template vector extraction
+### Pose sequence reconstruction with VAE
+First, you need to train the VAE by pose sequence reconstruction:
 
 ```bash
 python main.py --config_file configs/pose2pose.yaml \
@@ -154,7 +154,8 @@ python main.py --config_file configs/pose2pose.yaml \
     DATASET.SPEAKER oliver
 ```
 
-Afterwards, you can compute FTD with the pretrained VAE's encoder by spotting `VOICE2POSE.POSE_ENCODER.AE_CHECKPOINT` as follows
+### Compute FTD while training SDT-BP
+Once the VAE is train, you can compute FTD while training our **SDT-BP** model by spotting out `VOICE2POSE.POSE_ENCODER.AE_CHECKPOINT` as follows:
 
 ```bash
 python main.py --config_file configs/voice2pose_sdt_bp.yaml \
@@ -163,7 +164,8 @@ python main.py --config_file configs/voice2pose_sdt_bp.yaml \
     VOICE2POSE.POSE_ENCODER.AE_CHECKPOINT <path-to-VAE-checkpoint>
 ```
 
-To use the VAE's encoding as template vectors when training, use change the config file and spot `VOICE2POSE.POSE_ENCODER.AE_CHECKPOINT` as follows
+### Training SDT-VAE
+By changing the config file and spotting out `VOICE2POSE.POSE_ENCODER.AE_CHECKPOINT`, you can train our **SDT-VAE** model, and the FTD metric will also be computed:
 
 ```bash
 python main.py --config_file configs/voice2pose_sdt_vae.yaml \
