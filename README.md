@@ -55,7 +55,12 @@ pip install -r requirements.txt
 
 We use a subset (Oliver and Kubinec) of the [Speech2Gesture](https://people.eecs.berkeley.edu/~shiry/projects/speech2gesture/index.html) dataset and remove frames with bad human poses. We also collect data of two mandarine speakers (Luo and Xing).
 
-To ease later research, we pack our processed data. Please download from this [link](https://shanghaitecheducn-my.sharepoint.com/:f:/g/personal/qianshh_shanghaitech_edu_cn/EhOVnrnCYS5KqDIkamXBJbgBLOzu8vEFGwy88jSRSNATFA?e=Hc0cOO) and organize them under `datasets/speakers` as the above dirctory hierarchy. Note that these packages only provide 2d human pose sequences and corresponding audio clips. For video frames, please refer to the [Speech2Gesture](https://people.eecs.berkeley.edu/~shiry/projects/speech2gesture/index.html) dataset.
+To ease later research, we pack our processed data including **2d human pose sequences** and corresponding **audio clips**.
+Please download from this [link](https://shanghaitecheducn-my.sharepoint.com/:f:/g/personal/qianshh_shanghaitech_edu_cn/EhOVnrnCYS5KqDIkamXBJbgBLOzu8vEFGwy88jSRSNATFA?e=Hc0cOO) and organize the data under `datasets/speakers` as the above dirctory hierarchy.
+
+Note that you do NOT need the **source video** frames to run this repo. In case you still want them for your own usage:
+- For Luo and Xing, we provide the links of source videos as text files along side the above data packs.
+- For Oliver and Kubinec, please refer to the [Speech2Gesture](https://people.eecs.berkeley.edu/~shiry/projects/speech2gesture/index.html) dataset. 
 
 Since our method address the entire upper body including the face and hands, the number of keypoints in our data is 137. For more details, please refer to [this](./pose_definition.md) document.
 
