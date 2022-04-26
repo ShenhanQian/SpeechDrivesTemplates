@@ -324,7 +324,7 @@ class Trainer(object):
         for k, v in tensor_dict.items():
             torch.distributed.reduce(v, 0)
             if self.is_master_process():
-                v /= self.get_world_size()
+                tensor_dict[k] = v / self.get_world_size()
     
     def concat_tensor_dict(self, input_dict, collection_dict):
         for k, v in input_dict.items():

@@ -85,7 +85,7 @@ class GestureDataset(Dataset):
             clip = self.clips.iloc[idx]
 
             speaker = clip['speaker']
-            arr = np.load(os.path.join(self.root_dir, clip['pose_fn']), mmap_mode=None)
+            arr = np.load(os.path.join(self.root_dir, clip['pose_fn']))
 
             audio = arr['audio']
             audio_length, num_frames = parse_audio_length(self.cfg.AUDIO_LENGTH, self.cfg.AUDIO_SR, self.cfg.FPS)
