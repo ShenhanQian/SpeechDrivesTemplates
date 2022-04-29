@@ -1,12 +1,17 @@
 # Speech Drives Templates
-
-The official repo for the ICCV-2021 paper "Speech Drives Templates: Co-Speech Gesture Synthesis with Learned Templates".
+The official repo for the ICCV-2021 paper "Speech Drives Templates: Co-Speech Gesture Synthesis with Learned Templates". <br>
+[paper](https://arxiv.org/abs/2108.08020) / [video](https://youtu.be/yu-5gUHn6h8)
 
 <p align="center">
   <img src="./iccv2021_sdt.jpg" width=500px/>
 </p>
 
 Our paper and this repo focus on upper-body pose generation from audio. To synthesize images from poses, please refer to this [Pose2Img](https://github.com/zyhbili/Pose2Img) repo.
+
+**🔔 Update:**  
+
+- 2022-04-26: Change `POSE2POSE.LAMBDA_KL` in `config/default.py` from 1.0 to 0.1.
+- 2022-04-29: Uploaded checkpoints for all subjects.
 
 ## Directory hierarchy
 
