@@ -8,10 +8,10 @@ The official repo for the ICCV-2021 paper "Speech Drives Templates: Co-Speech Ge
 
 Our paper and this repo focus on upper-body pose generation from audio. To synthesize images from poses, please refer to this [Pose2Img](https://github.com/zyhbili/Pose2Img) repo.
 
-**🔔 Update:**  
+**🔔 Update:**
 
+- 2022-04-29: Upload checkpoints for all subjects.
 - 2022-04-26: Change `POSE2POSE.LAMBDA_KL` in `config/default.py` from 1.0 to 0.1.
-- 2022-04-29: Uploaded checkpoints for all subjects.
 
 ## Directory hierarchy
 
