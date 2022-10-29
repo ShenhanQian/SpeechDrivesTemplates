@@ -183,6 +183,7 @@ python main.py --config_file configs/voice2pose_sdt_vae.yaml \
     DATASET.SPEAKER oliver \
     VOICE2POSE.POSE_ENCODER.AE_CHECKPOINT <path-to-VAE-checkpoint>
 ```
+For evaluation and demo with our SDT-VAE model, dont't forget to always specify the `VOICE2POSE.POSE_ENCODER.AE_CHECKPOINT` parameter.
 
 ## Misc
 
