@@ -202,12 +202,14 @@ For evaluation and demo with our SDT-VAE model, dont't forget to always specify 
 
 - To run any module other than the main files in the root directory, for example the `core\datasets\gesture_dataset.py` file, you should run `python -m core.datasets.gesture_dataset` rather than `python core\datasets\gesture_dataset.py`. This is an interesting problem of Python's relative importing.
 
-
+## Cite
 ```
 @inproceedings{qian2021speech,
   title={Speech Drives Templates: Co-Speech Gesture Synthesis with Learned Templates},
-  author={Qian, Shenhan and Tu, Zhi and Zhi, YiHao and Liu, Wen and Gao, Shenghua},
-  journal={International Conference on Computer Vision (ICCV)},
-  year={2021}
+  author={Qian, Shenhan and Tu, Zhi and Zhi, Yihao and Liu, Wen and Gao, Shenghua},
+  booktitle={2021 IEEE/CVF International Conference on Computer Vision (ICCV)},
+  pages={11057--11066},
+  year={2021},
+  organization={IEEE}
 }
 ```
