@@ -1,6 +1,6 @@
 # Speech Drives Templates
 The official repo for the ICCV-2021 paper "Speech Drives Templates: Co-Speech Gesture Synthesis with Learned Templates". <br>
-[paper](https://arxiv.org/abs/2108.08020) / [video](https://youtu.be/yu-5gUHn6h8)
+[project](https://shenhanqian.com/sdt) / [paper](https://arxiv.org/abs/2108.08020) / [video](https://youtu.be/yu-5gUHn6h8)
 
 <p align="center">
   <img src="./iccv2021_sdt.jpg" width=500px/>
