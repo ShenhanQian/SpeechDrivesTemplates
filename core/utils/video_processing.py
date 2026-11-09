@@ -125,7 +125,7 @@ class VideoWriter(object):
 
         try:
             shutil.rmtree(tmp_dir)
-        except:
+        except OSError:
             pass
 
         vid_toc = (time.time() - vid_tic)
